@@ -11,11 +11,21 @@
       width: 100%; height: 100%;
       background: #000;
       overflow: hidden;
-      font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
-    /* ── IDLE SCREEN ─────────────────────────────────────── */
-    #idle-screen {
+    /* Avatar ocupa TODO el viewport */
+    #avatar-iframe {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      display: block;
+      z-index: 1;
+    }
+
+    /* Overlay de carga encima del iframe */
+    #loading-overlay {
       position: fixed;
       inset: 0;
       background: #05080f;
@@ -23,222 +33,123 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 32px;
+      gap: 20px;
       z-index: 10;
       transition: opacity 0.8s ease;
     }
-
-    #idle-screen.hidden {
+    #loading-overlay.hidden {
       opacity: 0;
       pointer-events: none;
     }
 
-    .orb {
-      width: 140px; height: 140px;
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid #1e293b;
+      border-top-color: #0ea5e9;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #1e40af, #0ea5e9 40%, #0f172a 75%);
-      box-shadow: 0 0 50px rgba(14,165,233,0.25), 0 0 100px rgba(14,165,233,0.1);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3.5rem;
-      animation: orb-breathe 4s ease-in-out infinite;
-      cursor: default;
+      animation: spin 0.8s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes orb-breathe {
-      0%,100% { transform: scale(1);   box-shadow: 0 0 40px rgba(14,165,233,0.2); }
-      50%      { transform: scale(1.06); box-shadow: 0 0 80px rgba(14,165,233,0.45); }
-    }
-
-    .orb.listening {
-      background: radial-gradient(circle at 35% 35%, #14532d, #22c55e 40%, #052e16 75%);
-      box-shadow: 0 0 60px rgba(34,197,94,0.4), 0 0 120px rgba(34,197,94,0.2);
-      animation: orb-listen 0.7s ease-in-out infinite;
-    }
-
-    @keyframes orb-listen {
-      0%,100% { transform: scale(1);    box-shadow: 0 0 60px rgba(34,197,94,0.4); }
-      50%      { transform: scale(1.12); box-shadow: 0 0 120px rgba(34,197,94,0.7); }
-    }
-
-    #idle-label {
+    #loading-text {
       color: #475569;
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
     }
 
-    #idle-label.listening {
-      color: #22c55e;
-      letter-spacing: 0.2em;
-    }
-
-    /* Olas del micrófono */
-    .wave-bars {
-      display: flex; align-items: center; gap: 4px; height: 28px;
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .wave-bars.active { opacity: 1; }
-    .wave-bars span {
-      display: block; width: 4px; border-radius: 2px;
-      background: #22c55e;
-      animation: bar 0.8s ease-in-out infinite;
-    }
-    .wave-bars span:nth-child(1){ height:8px;  animation-delay:0s;   }
-    .wave-bars span:nth-child(2){ height:18px; animation-delay:0.1s; }
-    .wave-bars span:nth-child(3){ height:28px; animation-delay:0.2s; }
-    .wave-bars span:nth-child(4){ height:18px; animation-delay:0.3s; }
-    .wave-bars span:nth-child(5){ height:8px;  animation-delay:0.4s; }
-    @keyframes bar {
-      0%,100%{ transform:scaleY(0.4); opacity:0.5; }
-      50%    { transform:scaleY(1);   opacity:1;   }
-    }
-
-    /* ── AVATAR ──────────────────────────────────────────── */
-    #avatar-wrap {
+    /* Pill de estado encima del avatar */
+    #status-pill {
       position: fixed;
-      inset: 0;
-      z-index: 5;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-    }
-
-    #avatar-wrap.visible { display: flex; }
-
-    #avatar-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      /* fuerza aspect-ratio 9:16 centrado verticalmente */
-      max-width: calc(100vh * 9 / 16);
-      object-fit: cover;
-    }
-
-    /* ── OVERLAY encima del avatar ───────────────────────── */
-    #avatar-overlay {
-      position: fixed;
-      bottom: 28px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 20;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #avatar-overlay.visible { display: flex; }
-
-    .pill {
       background: rgba(0,0,0,0.55);
       color: #cbd5e1;
-      padding: 7px 20px;
+      padding: 7px 22px;
       border-radius: 999px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       font-size: 0.78rem;
       letter-spacing: 0.08em;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.08);
       white-space: nowrap;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .pill.green { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+    #status-pill.listening {
+      color: #4ade80;
+      border-color: rgba(74,222,128,0.3);
+      background: rgba(0,0,0,0.7);
+    }
 
-    /* Botón cerrar avatar */
-    #close-btn {
-      position: fixed;
-      top: 16px; right: 16px;
-      z-index: 30;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #94a3b8;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1rem;
+    .wave-bars {
       display: none;
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(8px);
-      transition: background 0.2s;
+      align-items: center;
+      gap: 3px;
+      height: 16px;
     }
-    #close-btn:hover { background: rgba(239,68,68,0.4); color: white; }
-    #close-btn.visible { display: flex; }
+    .wave-bars.active { display: flex; }
+    .wave-bars span {
+      display: block; width: 3px;
+      border-radius: 2px;
+      background: #4ade80;
+      animation: bar 0.7s ease-in-out infinite;
+    }
+    .wave-bars span:nth-child(1){ height:5px;  animation-delay:0s;   }
+    .wave-bars span:nth-child(2){ height:12px; animation-delay:0.1s; }
+    .wave-bars span:nth-child(3){ height:16px; animation-delay:0.2s; }
+    .wave-bars span:nth-child(4){ height:12px; animation-delay:0.3s; }
+    .wave-bars span:nth-child(5){ height:5px;  animation-delay:0.4s; }
+    @keyframes bar {
+      0%,100%{ transform:scaleY(0.4); opacity:0.5; }
+      50%    { transform:scaleY(1);   opacity:1;   }
+    }
   </style>
 </head>
 <body>
 
-  <!-- IDLE: esfera + label -->
-  <div id="idle-screen">
-    <div class="orb" id="orb">🎙️</div>
-    <div id="idle-label">Di "Oye Clara"</div>
+  <!-- Avatar fullscreen — carga inmediatamente -->
+  <iframe
+    id="avatar-iframe"
+    allow="microphone; camera; autoplay"
+    title="Clara"
+    allowfullscreen
+  ></iframe>
+
+  <!-- Overlay de carga mientras el iframe no está listo -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">Cargando a Clara...</div>
+  </div>
+
+  <!-- Pill de estado -->
+  <div id="status-pill">
     <div class="wave-bars" id="wave-bars">
       <span></span><span></span><span></span><span></span><span></span>
     </div>
+    <span id="pill-text">Di "Oye Clara" para hablar</span>
   </div>
-
-  <!-- AVATAR fullscreen -->
-  <div id="avatar-wrap">
-    <iframe id="avatar-iframe"
-      allow="microphone; camera; autoplay"
-      title="Clara"
-      allowfullscreen>
-    </iframe>
-  </div>
-
-  <!-- Overlay status sobre avatar -->
-  <div id="avatar-overlay">
-    <div class="pill" id="overlay-pill">Di "Oye Clara" para hablar</div>
-  </div>
-
-  <!-- Botón cerrar -->
-  <button id="close-btn" title="Cerrar avatar">✕</button>
 
   <script>
-    const BACKEND = 'http://localhost:8090';
+    const BACKEND   = 'http://localhost:8090';
+    const iframe    = document.getElementById('avatar-iframe');
+    const loadingOv = document.getElementById('loading-overlay');
+    const pill      = document.getElementById('status-pill');
+    const pillText  = document.getElementById('pill-text');
+    const waveBars  = document.getElementById('wave-bars');
 
-    // DOM
-    const idleScreen   = document.getElementById('idle-screen');
-    const orb          = document.getElementById('orb');
-    const idleLabel    = document.getElementById('idle-label');
-    const waveBars     = document.getElementById('wave-bars');
-    const avatarWrap   = document.getElementById('avatar-wrap');
-    const avatarIframe = document.getElementById('avatar-iframe');
-    const avatarOverlay= document.getElementById('avatar-overlay');
-    const overlayPill  = document.getElementById('overlay-pill');
-    const closeBtn     = document.getElementById('close-btn');
+    let isListening = false;
+    let wakeRecog   = null;
+    let cmdRecog    = null;
+    let sessionId   = 'clara_' + Date.now();
 
-    let avatarActive = false;
-    let isListening  = false;
-    let wakeRecog    = null;
-    let cmdRecog     = null;
-    let sessionId    = 'clara_' + Date.now();
-
-    // ── Estado visual ──────────────────────────────────────
-    function setIdle(text) {
-      idleLabel.textContent = text;
-      idleLabel.classList.remove('listening');
-      orb.classList.remove('listening');
-      waveBars.classList.remove('active');
-    }
-
-    function setListening() {
-      idleLabel.textContent = 'Escuchando...';
-      idleLabel.classList.add('listening');
-      orb.classList.add('listening');
-      waveBars.classList.add('active');
-      overlayPill.textContent = 'Escuchando...';
-      overlayPill.classList.add('green');
-    }
-
-    function resetOverlay() {
-      overlayPill.textContent = 'Di "Oye Clara" para hablar';
-      overlayPill.classList.remove('green');
-    }
-
-    // ── Mostrar / ocultar avatar ───────────────────────────
-    async function showAvatar() {
-      if (avatarActive) return;
-      setIdle('Cargando...');
+    // ── 1. Cargar avatar al entrar ──────────────────────────
+    async function initAvatar() {
       try {
         const res = await fetch(`${BACKEND}/embed`, {
           method : 'POST',
@@ -247,39 +158,42 @@
         });
         const data = await res.json();
         if (!data.url) throw new Error('Sin URL');
-        avatarIframe.src = data.url;
-        avatarWrap.classList.add('visible');
-        avatarOverlay.classList.add('visible');
-        closeBtn.classList.add('visible');
-        idleScreen.classList.add('hidden');
-        avatarActive = true;
+
+        iframe.src = data.url;
+        iframe.onload = () => {
+          loadingOv.classList.add('hidden');
+        };
+        // Safety: ocultar overlay tras 8s aunque onload no dispare
+        setTimeout(() => loadingOv.classList.add('hidden'), 8000);
+
       } catch(err) {
-        console.error('Error avatar:', err);
-        setIdle('Error — di "Oye Clara" para reintentar');
-        isListening = false;
-        setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 500);
+        document.getElementById('loading-text').textContent = 'Error conectando — recarga la página';
+        console.error(err);
       }
     }
 
-    function hideAvatar() {
-      avatarIframe.src = '';
-      avatarWrap.classList.remove('visible');
-      avatarOverlay.classList.remove('visible');
-      closeBtn.classList.remove('visible');
-      idleScreen.classList.remove('hidden');
-      avatarActive = false;
-      setIdle('Di "Oye Clara"');
+    // ── 2. Estado visual pill ───────────────────────────────
+    function setIdle() {
+      pill.classList.remove('listening');
+      waveBars.classList.remove('active');
+      pillText.textContent = 'Di "Oye Clara" para hablar';
     }
 
-    closeBtn.addEventListener('click', hideAvatar);
+    function setListening() {
+      pill.classList.add('listening');
+      waveBars.classList.add('active');
+      pillText.textContent = 'Escuchando...';
+    }
 
-    // ── Wake word continuo ─────────────────────────────────
+    function setPillText(text, ms = 0) {
+      pillText.textContent = text;
+      if (ms) setTimeout(setIdle, ms);
+    }
+
+    // ── 3. Wake word continuo ───────────────────────────────
     function startWakeWord() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        setIdle('Usa Chrome para reconocimiento de voz');
-        return;
-      }
+      if (!SR) { setPillText('Usa Chrome para reconocimiento de voz'); return; }
 
       wakeRecog = new SR();
       wakeRecog.continuous     = true;
@@ -288,54 +202,36 @@
 
       wakeRecog.onresult = (e) => {
         const t = Array.from(e.results)
-          .map(r => r[0].transcript)
-          .join(' ')
-          .toLowerCase()
-          .trim();
+          .map(r => r[0].transcript).join(' ')
+          .toLowerCase().trim();
 
         if (!isListening && (
           t.includes('oye clara') ||
           t.includes('oye, clara') ||
           t.includes('hey clara')
-        )) {
-          onWakeWord();
-        }
+        )) onWakeWord();
       };
 
       wakeRecog.onend = () => {
-        if (!isListening) setTimeout(() => {
-          try { wakeRecog.start(); } catch(e) {}
-        }, 300);
+        if (!isListening) setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 300);
       };
 
       wakeRecog.onerror = (e) => {
-        if (e.error === 'not-allowed') {
-          setIdle('Permiso de micrófono denegado');
-        }
+        if (e.error === 'not-allowed') setPillText('Permiso de micrófono denegado');
       };
 
       try { wakeRecog.start(); } catch(e) {}
     }
 
-    // ── Wake word detectado ────────────────────────────────
+    // ── 4. Wake word detectado → escuchar comando ───────────
     async function onWakeWord() {
       if (isListening) return;
       isListening = true;
-
       try { wakeRecog.stop(); } catch(e) {}
-
-      // 1. Mostrar avatar si no está activo (genera URL fresca)
-      if (!avatarActive) await showAvatar();
-      if (!avatarActive) return; // showAvatar falló
-
-      // 2. Ponerse en modo escucha
       setListening();
-
-      // 3. Escuchar el comando
       listenCommand();
     }
 
-    // ── Escuchar comando del usuario ───────────────────────
     function listenCommand() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       cmdRecog = new SR();
@@ -345,22 +241,20 @@
 
       cmdRecog.onresult = (e) => {
         let text = e.results[0][0].transcript.trim();
-        // Limpiar wake word si quedó en el transcript
-        text = text.replace(/^(oye|hey)[,.]?\s*clara[,.]?\s*/i, '').trim();
+        const raw = text.toLowerCase();
 
-        // Detectar despedida → cerrar sesión
-        const farewell = /(adi[oó]s|chao|hasta luego|hasta pronto|nos vemos)[,.]?\s*clara/i;
-        if (farewell.test(text) || farewell.test(e.results[0][0].transcript)) {
-          overlayPill.textContent = '¡Hasta luego! 👋';
-          overlayPill.classList.remove('green');
+        // Despedida → nada (solo queda en pantalla, no cierra)
+        if (/(adiós|adios|chao|hasta luego|hasta pronto|nos vemos)\s*(clara)?/i.test(raw)) {
+          setPillText('¡Hasta luego! 👋', 3000);
           finishListening();
-          setTimeout(hideAvatar, 1200);
           return;
         }
 
+        // Limpiar wake word si quedó
+        text = text.replace(/^(oye|hey)[,.]?\s*clara[,.]?\s*/i, '').trim();
+
         if (text) {
-          overlayPill.textContent = `"${text}"`;
-          overlayPill.classList.remove('green');
+          setPillText(`"${text}"`);
           sendToBackend(text);
         } else {
           finishListening();
@@ -368,26 +262,18 @@
       };
 
       cmdRecog.onerror = () => finishListening();
-      cmdRecog.onend   = () => {
-        // Si no hubo resultado, terminar
-        if (isListening) finishListening();
-      };
+      cmdRecog.onend   = () => { if (isListening) finishListening(); };
 
       try { cmdRecog.start(); } catch(e) { finishListening(); }
     }
 
     function finishListening() {
       isListening = false;
-      orb.classList.remove('listening');
-      idleLabel.classList.remove('listening');
-      waveBars.classList.remove('active');
-      setIdle('Di "Oye Clara"');
-      resetOverlay();
-      // Reanudar wake word
+      setIdle();
       setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 500);
     }
 
-    // ── Enviar al backend (LLM Bedrock + tools SQL) ────────
+    // ── 5. Enviar al backend ────────────────────────────────
     async function sendToBackend(message) {
       try {
         const res = await fetch(`${BACKEND}/chat`, {
@@ -396,21 +282,18 @@
           body   : JSON.stringify({ message, session_id: sessionId }),
         });
         const data = await res.json();
-        console.log('[Clara →]', data.reply);
-        // La voz la maneja LiveAvatar directamente
-        // Mostramos la respuesta brevemente en la pill
-        overlayPill.textContent = data.reply?.substring(0, 80) + (data.reply?.length > 80 ? '…' : '');
-        setTimeout(resetOverlay, 5000);
-      } catch (err) {
+        const reply = data.reply || '';
+        setPillText(reply.substring(0, 90) + (reply.length > 90 ? '…' : ''), 6000);
+      } catch(err) {
+        setPillText('Error de conexión', 3000);
         console.error(err);
-        overlayPill.textContent = 'Error de conexión';
-        setTimeout(resetOverlay, 3000);
       } finally {
         finishListening();
       }
     }
 
-    // ── Init ───────────────────────────────────────────────
+    // ── Init ────────────────────────────────────────────────
+    initAvatar();
     startWakeWord();
   </script>
 </body>
