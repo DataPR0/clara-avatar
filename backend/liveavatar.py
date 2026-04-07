@@ -11,7 +11,8 @@ load_dotenv()
 
 LIVEAVATAR_API_KEY = os.getenv("LIVEAVATAR_API_KEY", "")
 LIVEAVATAR_BASE = "https://api.liveavatar.com"
-LIVEAVATAR_AVATAR_ID = os.getenv("LIVEAVATAR_AVATAR_ID", "")
+LIVEAVATAR_AVATAR_ID = os.getenv("LIVEAVATAR_AVATAR_ID", "65f9e3c9-d48b-4118-b73a-4ae2e3cbb8f0")
+LIVEAVATAR_CONTEXT_ID = os.getenv("LIVEAVATAR_CONTEXT_ID", "2171ae6b-356a-4d76-8709-9ba200b4659f")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "")
 
@@ -98,6 +99,7 @@ class LiveAvatarClient:
                 headers=self.headers,
                 json={
                     "avatar_id": avatar_id or LIVEAVATAR_AVATAR_ID,
+                    "context_id": LIVEAVATAR_CONTEXT_ID,
                     "is_sandbox": sandbox,
                 },
             )

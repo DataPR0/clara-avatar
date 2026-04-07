@@ -5,7 +5,14 @@ Formato compatible con OpenAI function calling
 
 from tools.sql_tools import SqlTools
 
-_sql = SqlTools()
+_sql = None
+
+def _get_sql():
+    global _sql
+    if _sql is None:
+        _sql = SqlTools()
+    return _sql
+
 
 
 TOOLS = [
@@ -116,20 +123,21 @@ def get_tools_schema() -> list:
 def execute_tool(tool_name: str, args: dict) -> any:
     """Ejecuta un tool por nombre y retorna el resultado."""
     try:
+        sql = _get_sql()
         if tool_name == "query_sql":
-            return _sql.query_sql(args["sql"], args.get("limit", 100))
+            return sql.query_sql(args["sql"], args.get("limit", 100))
 
         elif tool_name == "list_tables":
-            return _sql.list_tables()
+            return sql.list_tables()
 
         elif tool_name == "describe_table":
-            return _sql.describe_table(args["table_name"])
+            return sql.describe_table(args["table_name"])
 
         elif tool_name == "search_tables":
-            return _sql.search_tables(args["keyword"])
+            return sql.search_tables(args["keyword"])
 
         elif tool_name == "get_row_count":
-            return _sql.get_row_count(args["table_name"])
+            return sql.get_row_count(args["table_name"])
 
         else:
             return {"error": f"Tool desconocido: {tool_name}"}
