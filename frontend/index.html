@@ -3,77 +3,300 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clara — Asistente IA</title>
-  <link rel="stylesheet" href="src/style.css" />
+  <title>Clara</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body, html {
+      width: 100%; height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Avatar ocupa toda la pantalla, vertical */
+    #avatar-iframe {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+      object-fit: cover;
+      display: none;
+      z-index: 1;
+    }
+
+    /* Pantalla de carga / idle */
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      gap: 24px;
+    }
+
+    .avatar-glow {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #0ea5e9 0%, #0284c7 50%, #0a0a0a 80%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      animation: glow-idle 3s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(14, 165, 233, 0.3);
+    }
+
+    @keyframes glow-idle {
+      0%, 100% { box-shadow: 0 0 30px rgba(14,165,233,0.2); transform: scale(1); }
+      50% { box-shadow: 0 0 60px rgba(14,165,233,0.5); transform: scale(1.05); }
+    }
+
+    .glow-listening {
+      animation: glow-listen 0.6s ease-in-out infinite !important;
+      box-shadow: 0 0 80px rgba(34, 197, 94, 0.6) !important;
+      background: radial-gradient(circle, #22c55e 0%, #16a34a 50%, #0a0a0a 80%) !important;
+    }
+
+    @keyframes glow-listen {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(34,197,94,0.5); }
+      50% { transform: scale(1.1); box-shadow: 0 0 100px rgba(34,197,94,0.8); }
+    }
+
+    #status-label {
+      color: #64748b;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    #status-label.listening { color: #22c55e; }
+
+    .wake-hint {
+      color: #334155;
+      font-size: 0.8rem;
+      margin-top: -10px;
+    }
+
+    /* Overlay encima del avatar (status sutil) */
+    #overlay {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #overlay.visible { display: flex; }
+
+    .overlay-status {
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Mic wave cuando escucha */
+    .mic-wave {
+      display: flex; align-items: center; gap: 3px; height: 20px;
+    }
+    .mic-wave span {
+      display: block;
+      width: 3px;
+      background: #22c55e;
+      border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+    .mic-wave span:nth-child(1) { height: 6px; animation-delay: 0s; }
+    .mic-wave span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+    .mic-wave span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+    .mic-wave span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
+    .mic-wave span:nth-child(5) { height: 6px; animation-delay: 0.4s; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header>
-      <div class="logo">
-        <span class="avatar-icon">🎙️</span>
-        <span class="name">Clara</span>
-        <span class="tagline">Asistente IA · DataPro</span>
-      </div>
-      <div class="status-bar">
-        <span id="status-dot" class="dot idle"></span>
-        <span id="status-text">Esperando "Oye Clara"...</span>
-      </div>
-    </header>
 
-    <!-- Avatar Video -->
-    <div id="avatar-container">
-      <div id="avatar-placeholder">
-        <div class="pulse-ring"></div>
-        <span class="avatar-emoji">🤖</span>
-        <p>Cargando avatar...</p>
-      </div>
-      <iframe
-        id="avatar-iframe"
-        allow="microphone; camera"
-        title="Clara Avatar"
-        style="display:none; width:100%; height:100%; border:none; border-radius:16px;"
-      ></iframe>
-    </div>
-
-    <!-- Chat / Transcript -->
-    <div id="chat-container">
-      <div id="messages"></div>
-      <div id="input-area">
-        <button id="mic-btn" class="mic-btn" title="Presiona para hablar">
-          🎤
-        </button>
-        <input
-          type="text"
-          id="text-input"
-          placeholder='Escribe o di "Oye Clara"...'
-          autocomplete="off"
-        />
-        <button id="send-btn">Enviar</button>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div id="controls">
-      <button id="start-avatar-btn" class="btn-primary">▶ Iniciar Avatar</button>
-      <button id="stop-avatar-btn" class="btn-danger" disabled>⏹ Detener</button>
-      <label class="toggle">
-        <input type="checkbox" id="wake-word-toggle" checked />
-        <span>Wake word activo</span>
-      </label>
-    </div>
-
-    <!-- Config Panel (hidden by default) -->
-    <div id="config-panel" style="display:none;">
-      <h3>⚙️ Configuración</h3>
-      <label>Backend URL:</label>
-      <input type="text" id="backend-url" value="http://localhost:8090" />
-      <button id="save-config-btn">Guardar</button>
-    </div>
-
-    <button id="config-toggle-btn" class="config-btn">⚙️</button>
+  <!-- Pantalla idle mientras no hay avatar -->
+  <div id="loading-screen">
+    <div class="avatar-glow" id="glow-ball">🎙️</div>
+    <div id="status-label">Di "Oye Clara"</div>
+    <div class="wake-hint">Esperando activación por voz...</div>
   </div>
 
-  <script src="src/app.js"></script>
+  <!-- Avatar iframe — pantalla completa -->
+  <iframe
+    id="avatar-iframe"
+    allow="microphone; camera; autoplay"
+    title="Clara"
+    allowfullscreen
+  ></iframe>
+
+  <!-- Overlay status sobre el avatar -->
+  <div id="overlay">
+    <div class="mic-wave" id="mic-wave" style="display:none;">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="overlay-status" id="overlay-text">Escuchando...</div>
+  </div>
+
+  <script>
+    const BACKEND = 'http://localhost:8090';
+
+    const loadingScreen = document.getElementById('loading-screen');
+    const avatarIframe  = document.getElementById('avatar-iframe');
+    const statusLabel   = document.getElementById('status-label');
+    const glowBall      = document.getElementById('glow-ball');
+    const overlay       = document.getElementById('overlay');
+    const overlayText   = document.getElementById('overlay-text');
+    const micWave       = document.getElementById('mic-wave');
+
+    let avatarLoaded = false;
+    let isListening  = false;
+    let wakeRecog    = null;
+    let cmdRecog     = null;
+
+    // ── Cargar avatar en el iframe ──────────────────────────────────────────
+    async function loadAvatar() {
+      try {
+        const res = await fetch(`${BACKEND}/embed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sandbox: false }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          avatarIframe.src = data.url;
+          avatarIframe.style.display = 'block';
+          // Ocultar loading screen cuando el iframe carga
+          avatarIframe.onload = () => {
+            loadingScreen.style.display = 'none';
+            overlay.classList.add('visible');
+            overlayText.textContent = 'Di "Oye Clara" para activarme';
+          };
+          avatarLoaded = true;
+        }
+      } catch (e) {
+        console.error('Error cargando avatar:', e);
+        statusLabel.textContent = 'Error conectando backend';
+      }
+    }
+
+    // ── Detección wake word continua ─────────────────────────────────────────
+    function startWakeWord() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        statusLabel.textContent = 'Usa Chrome para voz';
+        return;
+      }
+
+      wakeRecog = new SR();
+      wakeRecog.continuous    = true;
+      wakeRecog.interimResults = true;
+      wakeRecog.lang          = 'es-CO';
+
+      wakeRecog.onresult = (e) => {
+        const transcript = Array.from(e.results)
+          .map(r => r[0].transcript)
+          .join(' ')
+          .toLowerCase();
+
+        if (!isListening && (
+          transcript.includes('oye clara') ||
+          transcript.includes('oye, clara') ||
+          transcript.includes('hey clara')
+        )) {
+          activateClara();
+        }
+      };
+
+      wakeRecog.onend = () => {
+        if (!isListening) {
+          setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 300);
+        }
+      };
+
+      try { wakeRecog.start(); } catch(e) {}
+    }
+
+    // ── Activar Clara → escuchar comando ────────────────────────────────────
+    function activateClara() {
+      if (isListening) return;
+      isListening = true;
+
+      // UI feedback
+      glowBall.classList.add('glow-listening');
+      statusLabel.classList.add('listening');
+      statusLabel.textContent = 'Escuchando...';
+      micWave.style.display   = 'flex';
+      overlayText.textContent = 'Escuchando...';
+
+      try { wakeRecog.stop(); } catch(e) {}
+
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      cmdRecog = new SR();
+      cmdRecog.lang           = 'es-CO';
+      cmdRecog.interimResults = false;
+      cmdRecog.maxAlternatives = 1;
+
+      cmdRecog.onresult = (e) => {
+        let text = e.results[0][0].transcript.trim();
+        // Quitar el wake word si quedó al inicio
+        text = text.replace(/^(oye|hey)[,.]?\s*clara[,.]?\s*/i, '').trim();
+        if (text) sendToClara(text);
+      };
+
+      cmdRecog.onerror = () => deactivate();
+      cmdRecog.onend   = () => deactivate();
+
+      try { cmdRecog.start(); } catch(e) { deactivate(); }
+    }
+
+    function deactivate() {
+      isListening = false;
+      glowBall.classList.remove('glow-listening');
+      statusLabel.classList.remove('listening');
+      statusLabel.textContent = 'Di "Oye Clara"';
+      micWave.style.display   = 'none';
+      overlayText.textContent = 'Di "Oye Clara" para activarme';
+
+      // Reiniciar wake word
+      setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 500);
+    }
+
+    // ── Enviar mensaje al backend ────────────────────────────────────────────
+    async function sendToClara(text) {
+      overlayText.textContent = `"${text}"`;
+      try {
+        const res = await fetch(`${BACKEND}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
+        console.log('[Clara]', data.reply);
+        overlayText.textContent = 'Di "Oye Clara" para activarme';
+      } catch (e) {
+        console.error(e);
+        overlayText.textContent = 'Error de conexión';
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadAvatar();
+    startWakeWord();
+  </script>
 </body>
 </html>
