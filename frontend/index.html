@@ -236,32 +236,16 @@
     }
 
     // ── Mostrar / ocultar avatar ───────────────────────────
-    async function showAvatar() {
+    const AVATAR_URL = 'https://embed.liveavatar.com/v1/d482ba53-1a27-4751-b995-f03c9aee9865';
+
+    function showAvatar() {
       if (avatarActive) return;
-
-      setIdle('Cargando...');
-
-      try {
-        const res = await fetch(`${BACKEND}/embed`, {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body   : JSON.stringify({ sandbox: false }),
-        });
-        const data = await res.json();
-
-        if (!data.url) throw new Error('Sin URL');
-
-        avatarIframe.src = data.url;
-        avatarWrap.classList.add('visible');
-        avatarOverlay.classList.add('visible');
-        closeBtn.classList.add('visible');
-        idleScreen.classList.add('hidden');
-        avatarActive = true;
-
-      } catch (err) {
-        console.error('Error avatar:', err);
-        setIdle('Error — di "Oye Clara" para reintentar');
-      }
+      avatarIframe.src = AVATAR_URL;
+      avatarWrap.classList.add('visible');
+      avatarOverlay.classList.add('visible');
+      closeBtn.classList.add('visible');
+      idleScreen.classList.add('hidden');
+      avatarActive = true;
     }
 
     function hideAvatar() {
@@ -321,14 +305,14 @@
     }
 
     // ── Wake word detectado ────────────────────────────────
-    async function onWakeWord() {
+    function onWakeWord() {
       if (isListening) return;
       isListening = true;
 
       try { wakeRecog.stop(); } catch(e) {}
 
-      // 1. Mostrar avatar (si no está activo)
-      if (!avatarActive) await showAvatar();
+      // 1. Mostrar avatar si no está activo
+      if (!avatarActive) showAvatar();
 
       // 2. Ponerse en modo escucha
       setListening();
@@ -349,6 +333,17 @@
         let text = e.results[0][0].transcript.trim();
         // Limpiar wake word si quedó en el transcript
         text = text.replace(/^(oye|hey)[,.]?\s*clara[,.]?\s*/i, '').trim();
+
+        // Detectar despedida → cerrar sesión
+        const farewell = /(adi[oó]s|chao|hasta luego|hasta pronto|nos vemos)[,.]?\s*clara/i;
+        if (farewell.test(text) || farewell.test(e.results[0][0].transcript)) {
+          overlayPill.textContent = '¡Hasta luego! 👋';
+          overlayPill.classList.remove('green');
+          finishListening();
+          setTimeout(hideAvatar, 1200);
+          return;
+        }
+
         if (text) {
           overlayPill.textContent = `"${text}"`;
           overlayPill.classList.remove('green');
