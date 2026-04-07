@@ -236,16 +236,29 @@
     }
 
     // ── Mostrar / ocultar avatar ───────────────────────────
-    const AVATAR_URL = 'https://embed.liveavatar.com/v1/de82b2cc-7314-40a1-b41f-cc456c66601c';
-
-    function showAvatar() {
+    async function showAvatar() {
       if (avatarActive) return;
-      avatarIframe.src = AVATAR_URL;
-      avatarWrap.classList.add('visible');
-      avatarOverlay.classList.add('visible');
-      closeBtn.classList.add('visible');
-      idleScreen.classList.add('hidden');
-      avatarActive = true;
+      setIdle('Cargando...');
+      try {
+        const res = await fetch(`${BACKEND}/embed`, {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify({ sandbox: false }),
+        });
+        const data = await res.json();
+        if (!data.url) throw new Error('Sin URL');
+        avatarIframe.src = data.url;
+        avatarWrap.classList.add('visible');
+        avatarOverlay.classList.add('visible');
+        closeBtn.classList.add('visible');
+        idleScreen.classList.add('hidden');
+        avatarActive = true;
+      } catch(err) {
+        console.error('Error avatar:', err);
+        setIdle('Error — di "Oye Clara" para reintentar');
+        isListening = false;
+        setTimeout(() => { try { wakeRecog.start(); } catch(e){} }, 500);
+      }
     }
 
     function hideAvatar() {
@@ -305,14 +318,15 @@
     }
 
     // ── Wake word detectado ────────────────────────────────
-    function onWakeWord() {
+    async function onWakeWord() {
       if (isListening) return;
       isListening = true;
 
       try { wakeRecog.stop(); } catch(e) {}
 
-      // 1. Mostrar avatar si no está activo
-      if (!avatarActive) showAvatar();
+      // 1. Mostrar avatar si no está activo (genera URL fresca)
+      if (!avatarActive) await showAvatar();
+      if (!avatarActive) return; // showAvatar falló
 
       // 2. Ponerse en modo escucha
       setListening();
