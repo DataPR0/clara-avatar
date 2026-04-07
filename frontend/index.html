@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clara — Asistente IA</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <span class="avatar-icon">🎙️</span>
+        <span class="name">Clara</span>
+        <span class="tagline">Asistente IA · DataPro</span>
+      </div>
+      <div class="status-bar">
+        <span id="status-dot" class="dot idle"></span>
+        <span id="status-text">Esperando "Oye Clara"...</span>
+      </div>
+    </header>
+
+    <!-- Avatar Video -->
+    <div id="avatar-container">
+      <div id="avatar-placeholder">
+        <div class="pulse-ring"></div>
+        <span class="avatar-emoji">🤖</span>
+        <p>Cargando avatar...</p>
+      </div>
+      <iframe
+        id="avatar-iframe"
+        allow="microphone; camera"
+        title="Clara Avatar"
+        style="display:none; width:100%; height:100%; border:none; border-radius:16px;"
+      ></iframe>
+    </div>
+
+    <!-- Chat / Transcript -->
+    <div id="chat-container">
+      <div id="messages"></div>
+      <div id="input-area">
+        <button id="mic-btn" class="mic-btn" title="Presiona para hablar">
+          🎤
+        </button>
+        <input
+          type="text"
+          id="text-input"
+          placeholder='Escribe o di "Oye Clara"...'
+          autocomplete="off"
+        />
+        <button id="send-btn">Enviar</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <button id="start-avatar-btn" class="btn-primary">▶ Iniciar Avatar</button>
+      <button id="stop-avatar-btn" class="btn-danger" disabled>⏹ Detener</button>
+      <label class="toggle">
+        <input type="checkbox" id="wake-word-toggle" checked />
+        <span>Wake word activo</span>
+      </label>
+    </div>
+
+    <!-- Config Panel (hidden by default) -->
+    <div id="config-panel" style="display:none;">
+      <h3>⚙️ Configuración</h3>
+      <label>Backend URL:</label>
+      <input type="text" id="backend-url" value="http://localhost:8090" />
+      <button id="save-config-btn">Guardar</button>
+    </div>
+
+    <button id="config-toggle-btn" class="config-btn">⚙️</button>
+  </div>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
